@@ -1,0 +1,68 @@
+name: Semantic Model Format & Lint
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.10" ]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install mypy black isort flake8
+
+      - name: Run mypy
+        id: mypy
+        run: |
+          mypy src/semantic_model_toolkit
+        continue-on-error: true
+
+      - name: Check with black
+        id: black
+        run: |
+          black --check src/semantic_model_toolkit examples
+        continue-on-error: true
+
+      - name: Check with isort
+        id: isort
+        run: |
+          isort --check-only src/semantic_model_toolkit examples
+        continue-on-error: true
+
+      - name: Run flake8
+        id: flake8
+        run: |
+          flake8 src/semantic_model_toolkit
+        continue-on-error: true
+
+      - name: Report failures
+        run: |
+          if [ "${{ steps.black.outcome }}" != "success" ]; then echo "black failed"; FAIL=1; fi
+          if [ "${{ steps.isort.outcome }}" != "success" ]; then echo "isort failed"; FAIL=1; fi
+          if [ "${{ steps.flake8.outcome }}" != "success" ]; then echo "flake8 failed"; FAIL=1; fi
+          if [ "$FAIL" == "1" ]; then exit 1; fi
+        continue-on-error: false

@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semantic-model-toolkit"
+version = "0.1.0"
+description = "A Python library to generate semantic model YAML files for Snowflake databases"
+readme = "README.md"
+authors = [
+    {name = "Snowflake", email = "support@snowflake.com"},
+]
+license = {text = "Apache License 2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "snowflake-connector-python>=3.0.0",
+    "PyYAML>=6.0",
+    "protobuf>=4.21.0",
+    "loguru>=0.6.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/your-username/semantic-model-toolkit"
+"Bug Tracker" = "https://github.com/your-username/semantic-model-toolkit/issues"
+
+[tool.black]
+target-version = ["py38"]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_return_any = true
+warn_unreachable = true
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203"
+exclude = [
+    "semantic_model_toolkit/protos/*.py",
+    "semantic_model_toolkit/*.py",
+    "examples"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+addopts = "--cov=semantic_model_toolkit"
+
+[tool.coverage.run]
+source = ["semantic_model_toolkit"]
+omit = ["tests/*", "semantic_model_toolkit/protos/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]

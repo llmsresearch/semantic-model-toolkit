@@ -1,0 +1,46 @@
+snowflake:
+  account: myaccount
+  user: myuser
+  password: mypassword
+  role: myrole
+  warehouse: mywarehouse
+
+semantic_model:
+  name: sales_analytics
+  base_tables:
+    - SALES_DB.PUBLIC.CUSTOMERS
+    - SALES_DB.PUBLIC.ORDERS
+    - SALES_DB.PUBLIC.PRODUCTS
+  n_sample_values: 3
+  allow_joins: true
+
+# Snowflake Cortex LLM (default)
+llm:
+  provider: cortex
+  model: llama3-8b
+  
+# Example OpenAI configuration
+# llm:
+#   provider: openai
+#   model: gpt-4
+#   api_key: your_openai_api_key
+#   temperature: 0.2
+#   max_tokens: 500
+
+# Example Azure OpenAI configuration
+# llm:
+#   provider: azure_openai
+#   azure_deployment_name: your_deployment_name
+#   api_key: your_azure_api_key
+#   api_endpoint: https://your-resource.openai.azure.com/
+#   api_version: 2023-05-15
+#   temperature: 0.2
+#   max_tokens: 500
+
+# Example Anthropic configuration
+# llm:
+#   provider: anthropic
+#   model: claude-3-sonnet-20240229
+#   api_key: your_anthropic_api_key
+#   temperature: 0.2
+#   max_tokens: 500 
