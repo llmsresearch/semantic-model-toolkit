@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-from semantic_model_generator.core.config import Config, OutputConfig, SemanticModelConfig, SnowflakeConfig
-from semantic_model_generator.core.model_generator import generate_semantic_model, save_semantic_model
+from semantic_model_toolkit.core.config import Config, OutputConfig, SemanticModelConfig, SnowflakeConfig
+from semantic_model_toolkit.core.model_generator import generate_semantic_model, save_semantic_model
 
 
 class TestCoreModule(unittest.TestCase):
@@ -22,9 +22,9 @@ class TestCoreModule(unittest.TestCase):
                 content = f.read()
                 self.assertEqual(content, yaml_str)
 
-    @patch("semantic_model_generator.core.model_generator.raw_schema_to_semantic_context")
-    @patch("semantic_model_generator.core.model_generator.generate_model_str_from_semantic_context")
-    @patch("semantic_model_generator.core.model_generator.create_snowflake_connection")
+    @patch("semantic_model_toolkit.core.model_generator.raw_schema_to_semantic_context")
+    @patch("semantic_model_toolkit.core.model_generator.generate_model_str_from_semantic_context")
+    @patch("semantic_model_toolkit.core.model_generator.create_snowflake_connection")
     def test_generate_semantic_model(self, mock_create_conn, mock_generate_str, mock_raw_schema):
         """Test generate_semantic_model function with mocked dependencies."""
         # Setup mocks

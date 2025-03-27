@@ -74,7 +74,7 @@ pip install semantic-model-toolkit[all]
 ### From Source
 
 ```bash
-git clone https://github.com/your-username/semantic-model-toolkit.git
+git clone https://github.com/llmsresearch/semantic-model-toolkit.git
 cd semantic-model-toolkit
 pip install -e .
 ```

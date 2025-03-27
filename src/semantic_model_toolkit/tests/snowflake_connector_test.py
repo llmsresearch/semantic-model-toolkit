@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from semantic_model_generator.data_processing.data_types import Column, Table
-from semantic_model_generator.snowflake_utils import snowflake_connector
+from semantic_model_toolkit.data_processing.data_types import Column, Table
+from semantic_model_toolkit.snowflake_utils import snowflake_connector
 
 
 @pytest.fixture
@@ -101,7 +101,7 @@ _TEST_TABLE_ONE = Table(
 
 
 @mock.patch(
-    "semantic_model_generator.snowflake_utils.snowflake_connector.snowflake_connection"
+    "semantic_model_toolkit.snowflake_utils.snowflake_connector.snowflake_connection"
 )
 def test_connect(
     mock_snowflake_connection: mock.MagicMock, mock_snowflake_connection_env
@@ -114,7 +114,7 @@ def test_connect(
 
     conn.cursor().execute.assert_has_calls(
         [
-            call("ALTER SESSION SET QUERY_TAG = 'SEMANTIC_MODEL_GENERATOR'"),
+            call("ALTER SESSION SET QUERY_TAG = 'semantic_model_toolkit'"),
             call("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 120"),
         ]
     )
@@ -122,7 +122,7 @@ def test_connect(
 
 
 @mock.patch(
-    "semantic_model_generator.snowflake_utils.snowflake_connector.snowflake_connection"
+    "semantic_model_toolkit.snowflake_utils.snowflake_connector.snowflake_connection"
 )
 def test_connect_with_schema(
     mock_snowflake_connection: mock.MagicMock, mock_snowflake_connection_env
@@ -137,7 +137,7 @@ def test_connect_with_schema(
 
     conn.cursor().execute.assert_has_calls(
         [
-            call("ALTER SESSION SET QUERY_TAG = 'SEMANTIC_MODEL_GENERATOR'"),
+            call("ALTER SESSION SET QUERY_TAG = 'semantic_model_toolkit'"),
             call("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 120"),
         ]
     )
@@ -145,10 +145,10 @@ def test_connect_with_schema(
 
 
 @mock.patch(
-    "semantic_model_generator.snowflake_utils.snowflake_connector._fetch_valid_tables_and_views"
+    "semantic_model_toolkit.snowflake_utils.snowflake_connector._fetch_valid_tables_and_views"
 )
 @mock.patch(
-    "semantic_model_generator.snowflake_utils.snowflake_connector.snowflake_connection"
+    "semantic_model_toolkit.snowflake_utils.snowflake_connector.snowflake_connection"
 )
 def test_get_valid_schema_table_columns_df(
     mock_snowflake_connection: mock.MagicMock,

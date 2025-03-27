@@ -1,4 +1,4 @@
-from semantic_model_generator.protos import semantic_model_pb2
+from semantic_model_toolkit.protos import semantic_model_pb2
 
 _VALID_YAML = """name: my test semantic model
 tables:

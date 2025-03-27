@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 from snowflake.connector import SnowflakeConnection
 
-from semantic_model_generator.validate_model import validate
+from semantic_model_toolkit.validate_model import validate
 
 
-@patch("semantic_model_generator.validate_model.send_message")
+@patch("semantic_model_toolkit.validate_model.send_message")
 def test_validate_success(mock_send_message):
     # Mock the response from send_message to simulate a successful response
     mock_send_message.return_value = {}
@@ -19,7 +19,7 @@ def test_validate_success(mock_send_message):
     assert result is None
 
 
-@patch("semantic_model_generator.validate_model.send_message")
+@patch("semantic_model_toolkit.validate_model.send_message")
 def test_validate_error(mock_send_message):
     # Mock the response from send_message to simulate an error response
     mock_send_message.return_value = {

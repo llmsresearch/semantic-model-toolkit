@@ -3,7 +3,7 @@ from unittest import TestCase
 import pytest
 import sqlglot
 
-from semantic_model_generator.data_processing.cte_utils import (
+from semantic_model_toolkit.data_processing.cte_utils import (
     _enrich_column_in_expr_with_aggregation,
     _get_col_expr,
     _validate_col,
@@ -12,7 +12,7 @@ from semantic_model_generator.data_processing.cte_utils import (
     generate_select,
     is_aggregation_expr,
 )
-from semantic_model_generator.protos import semantic_model_pb2
+from semantic_model_toolkit.protos import semantic_model_pb2
 
 
 def get_test_ctx() -> semantic_model_pb2.SemanticModel:

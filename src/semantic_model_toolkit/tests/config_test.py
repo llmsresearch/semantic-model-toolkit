@@ -4,7 +4,7 @@ import os
 import tempfile
 import unittest
 
-from semantic_model_generator.core.config import (
+from semantic_model_toolkit.core.config import (
     Config,
     LLMConfig,
     OutputConfig,

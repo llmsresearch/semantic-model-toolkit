@@ -8,12 +8,10 @@ from snowflake.connector import SnowflakeConnection
 from semantic_model_toolkit.core.config import Config, config_from_dict, load_config
 from semantic_model_toolkit.data_processing import proto_utils
 from semantic_model_toolkit.protos import semantic_model_pb2
-from semantic_model_toolkit.snowflake_utils.snowflake_connector import (
-    raw_schema_to_semantic_context,
-)
 from semantic_model_toolkit.snowflake_utils.utils import create_snowflake_connection
 from semantic_model_toolkit.generate_model import (
-    generate_model_str_from_semantic_context,
+    generate_model_str_from_snowflake,
+    raw_schema_to_semantic_context,
 )
 
 
@@ -67,8 +65,8 @@ def generate_semantic_model(
         )
     
     try:
-        # Generate semantic context from Snowflake
-        semantic_context = raw_schema_to_semantic_context(
+        # Generate YAML directly from Snowflake
+        yaml_str = generate_model_str_from_snowflake(
             base_tables=config.semantic_model.base_tables,
             semantic_model_name=config.semantic_model.name,
             conn=snowflake_connection,
@@ -77,15 +75,15 @@ def generate_semantic_model(
             llm_config=config.llm,
         )
         
-        # Generate YAML from semantic context
-        yaml_str = generate_model_str_from_semantic_context(semantic_context)
-        
         return yaml_str
     
     finally:
         # Close connection if we created it
-        if snowflake_connection and not snowflake_connection._is_closed():
-            snowflake_connection.close()
+        if snowflake_connection and not hasattr(snowflake_connection, '_is_closed'):
+            try:
+                snowflake_connection.close()
+            except:
+                pass
 
 
 def generate_from_file(config_path: str) -> str:

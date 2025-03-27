@@ -4,8 +4,8 @@ from typing import Any, TypeVar
 from google.protobuf.message import Message
 from loguru import logger
 
-from semantic_model_generator.data_processing.proto_utils import proto_to_yaml
-from semantic_model_generator.protos import semantic_model_pb2
+from semantic_model_toolkit.data_processing.proto_utils import proto_to_yaml
+from semantic_model_toolkit.protos import semantic_model_pb2
 
 # Max number of sample values we include in the semantic model representation.
 _MAX_SAMPLE_VALUES = 3

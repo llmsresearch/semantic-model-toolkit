@@ -8,8 +8,8 @@ import sqlglot.expressions
 from loguru import logger
 from sqlglot.dialects.snowflake import Snowflake
 
-from semantic_model_generator.protos import semantic_model_pb2
-from semantic_model_generator.snowflake_utils.snowflake_connector import (
+from semantic_model_toolkit.protos import semantic_model_pb2
+from semantic_model_toolkit.snowflake_utils.snowflake_connector import (
     OBJECT_DATATYPES,
 )
 

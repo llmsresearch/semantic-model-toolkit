@@ -22,8 +22,8 @@ from strictyaml import (
     YAMLValidationError,
 )
 
-from semantic_model_generator.protos import semantic_model_pb2
-from semantic_model_generator.validate.keywords import SF_RESERVED_WORDS
+from semantic_model_toolkit.protos import semantic_model_pb2
+from semantic_model_toolkit.validate.keywords import SF_RESERVED_WORDS
 
 scalar_type_map = {
     FieldDescriptor.TYPE_BOOL: Bool,

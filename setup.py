@@ -11,7 +11,7 @@ setup(
     description="A Python library to generate semantic model YAML files for Snowflake databases",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/semantic-model-toolkit",
+    url="https://github.com/llmsresearch/semantic-model-toolkit",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[

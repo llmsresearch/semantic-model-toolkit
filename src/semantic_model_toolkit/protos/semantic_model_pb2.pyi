@@ -224,34 +224,32 @@ class ForeignKey(_message.Message):
     def __init__(self, fkey_columns: _Optional[_Iterable[str]] = ..., pkey_table: _Optional[_Union[FullyQualifiedTable, _Mapping]] = ..., pkey_columns: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class Table(_message.Message):
-    __slots__ = ("name", "synonyms", "description", "base_table", "columns", "dimensions", "time_dimensions", "measures", "facts", "metrics", "primary_key", "foreign_keys", "filters")
+    __slots__ = ("name", "synonyms", "description", "base_table", "dimensions", "time_dimensions", "measures", "filters", "relationships", "metrics", "primary_keys", "foreign_keys")
     NAME_FIELD_NUMBER: _ClassVar[int]
     SYNONYMS_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     BASE_TABLE_FIELD_NUMBER: _ClassVar[int]
-    COLUMNS_FIELD_NUMBER: _ClassVar[int]
     DIMENSIONS_FIELD_NUMBER: _ClassVar[int]
     TIME_DIMENSIONS_FIELD_NUMBER: _ClassVar[int]
     MEASURES_FIELD_NUMBER: _ClassVar[int]
-    FACTS_FIELD_NUMBER: _ClassVar[int]
-    METRICS_FIELD_NUMBER: _ClassVar[int]
-    PRIMARY_KEY_FIELD_NUMBER: _ClassVar[int]
-    FOREIGN_KEYS_FIELD_NUMBER: _ClassVar[int]
     FILTERS_FIELD_NUMBER: _ClassVar[int]
+    RELATIONSHIPS_FIELD_NUMBER: _ClassVar[int]
+    METRICS_FIELD_NUMBER: _ClassVar[int]
+    PRIMARY_KEYS_FIELD_NUMBER: _ClassVar[int]
+    FOREIGN_KEYS_FIELD_NUMBER: _ClassVar[int]
     name: str
     synonyms: _containers.RepeatedScalarFieldContainer[str]
     description: str
     base_table: FullyQualifiedTable
-    columns: _containers.RepeatedCompositeFieldContainer[Column]
     dimensions: _containers.RepeatedCompositeFieldContainer[Dimension]
     time_dimensions: _containers.RepeatedCompositeFieldContainer[TimeDimension]
     measures: _containers.RepeatedCompositeFieldContainer[Fact]
-    facts: _containers.RepeatedCompositeFieldContainer[Fact]
-    metrics: _containers.RepeatedCompositeFieldContainer[Metric]
-    primary_key: PrimaryKey
-    foreign_keys: _containers.RepeatedCompositeFieldContainer[ForeignKey]
     filters: _containers.RepeatedCompositeFieldContainer[NamedFilter]
-    def __init__(self, name: _Optional[str] = ..., synonyms: _Optional[_Iterable[str]] = ..., description: _Optional[str] = ..., base_table: _Optional[_Union[FullyQualifiedTable, _Mapping]] = ..., columns: _Optional[_Iterable[_Union[Column, _Mapping]]] = ..., dimensions: _Optional[_Iterable[_Union[Dimension, _Mapping]]] = ..., time_dimensions: _Optional[_Iterable[_Union[TimeDimension, _Mapping]]] = ..., measures: _Optional[_Iterable[_Union[Fact, _Mapping]]] = ..., facts: _Optional[_Iterable[_Union[Fact, _Mapping]]] = ..., metrics: _Optional[_Iterable[_Union[Metric, _Mapping]]] = ..., primary_key: _Optional[_Union[PrimaryKey, _Mapping]] = ..., foreign_keys: _Optional[_Iterable[_Union[ForeignKey, _Mapping]]] = ..., filters: _Optional[_Iterable[_Union[NamedFilter, _Mapping]]] = ...) -> None: ...
+    relationships: _containers.RepeatedCompositeFieldContainer[Relationship]
+    metrics: _containers.RepeatedCompositeFieldContainer[Metric]
+    primary_keys: _containers.RepeatedCompositeFieldContainer[PrimaryKey]
+    foreign_keys: _containers.RepeatedCompositeFieldContainer[ForeignKey]
+    def __init__(self, name: _Optional[str] = ..., synonyms: _Optional[_Iterable[str]] = ..., description: _Optional[str] = ..., base_table: _Optional[_Union[FullyQualifiedTable, _Mapping]] = ..., dimensions: _Optional[_Iterable[_Union[Dimension, _Mapping]]] = ..., time_dimensions: _Optional[_Iterable[_Union[TimeDimension, _Mapping]]] = ..., measures: _Optional[_Iterable[_Union[Fact, _Mapping]]] = ..., filters: _Optional[_Iterable[_Union[NamedFilter, _Mapping]]] = ..., relationships: _Optional[_Iterable[_Union[Relationship, _Mapping]]] = ..., metrics: _Optional[_Iterable[_Union[Metric, _Mapping]]] = ..., primary_keys: _Optional[_Iterable[_Union[PrimaryKey, _Mapping]]] = ..., foreign_keys: _Optional[_Iterable[_Union[ForeignKey, _Mapping]]] = ...) -> None: ...
 
 class Metric(_message.Message):
     __slots__ = ("name", "synonyms", "description", "expr", "filter")

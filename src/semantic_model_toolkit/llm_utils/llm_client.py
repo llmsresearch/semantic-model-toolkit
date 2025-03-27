@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any, Union
 
 from loguru import logger
+from snowflake.connector import SnowflakeConnection
 
 from semantic_model_toolkit.core.config import LLMConfig
 
@@ -38,8 +39,19 @@ class CortexLLMClient(LLMClient):
             config: LLM configuration
         """
         self.model = config.model
-        # Additional Cortex-specific initialization
+        self._conn = None  # Will be set when connecting to Snowflake
+        self.timeout = 30  # Set a default timeout of 30 seconds
         logger.info(f"Initialized Cortex LLM client with model: {self.model}")
+    
+    def connect(self, conn: SnowflakeConnection):
+        """
+        Set the Snowflake connection to use for Cortex LLM calls.
+        
+        Args:
+            conn: Snowflake connection object
+        """
+        self._conn = conn
+        logger.info("Connected Cortex LLM client to Snowflake")
     
     def generate_description(self, context: str, prompt: str) -> str:
         """
@@ -52,9 +64,49 @@ class CortexLLMClient(LLMClient):
         Returns:
             str: The generated description
         """
-        # TODO: Implement Cortex LLM integration
-        logger.warning("Cortex LLM integration is not fully implemented, returning placeholder")
-        return "Auto-generated description (placeholder)"
+        if not self._conn:
+            logger.error("No Snowflake connection available for Cortex LLM")
+            return "Error: No Snowflake connection (call connect() first)"
+        
+        full_prompt = f"{prompt}\n\nContext:\n{context}"
+        # Escape single quotes in the prompt to prevent SQL injection
+        safe_prompt = full_prompt.replace("'", "''")
+        
+        try:
+            # Limit the prompt size to avoid Snowflake query size limits
+            if len(safe_prompt) > 10000:
+                logger.warning(f"Trimming prompt from {len(safe_prompt)} to 10000 characters")
+                safe_prompt = safe_prompt[:10000]
+            
+            # Call Snowflake Cortex COMPLETE function via SQL with statement timeout
+            # Adding statement_timeout_in_seconds to prevent query from hanging
+            self._conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 60")
+            
+            complete_sql = f"SELECT SNOWFLAKE.CORTEX.COMPLETE('{self.model}', '{safe_prompt}')"
+            cursor = self._conn.cursor()
+            cursor.execute(complete_sql)
+            result = cursor.fetchone()
+            
+            # Reset the timeout to default
+            self._conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 0")
+            
+            if result and len(result) > 0:
+                return str(result[0]).strip()
+            else:
+                logger.warning("Empty result from Cortex LLM")
+                return "No response from Cortex LLM"
+        except Exception as e:
+            logger.error(f"Error generating description with Cortex LLM: {e}")
+            # Try to reset the timeout even after an error
+            try:
+                self._conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 0")
+            except:
+                pass
+                
+            if hasattr(self, 'fallback_client') and self.fallback_client:
+                logger.info("Falling back to alternative LLM provider")
+                return self.fallback_client.generate_description(context, prompt)
+            return f"Error generating description: {str(e)}"
 
 
 class OpenAILLMClient(LLMClient):

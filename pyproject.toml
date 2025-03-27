@@ -25,11 +25,13 @@ dependencies = [
     "PyYAML>=6.0",
     "protobuf>=4.21.0",
     "loguru>=0.6.0",
+    "ruamel.yaml>=0.17.0",
+    "strictyaml>=1.7.0",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/your-username/semantic-model-toolkit"
-"Bug Tracker" = "https://github.com/your-username/semantic-model-toolkit/issues"
+"Homepage" = "https://github.com/llmsresearch/semantic-model-toolkit"
+"Bug Tracker" = "https://github.com/llmsresearch/semantic-model-toolkit/issues"
 
 [tool.black]
 target-version = ["py38"]
@@ -52,7 +54,6 @@ no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
-warn_return_any = true
 warn_unreachable = true
 
 [tool.flake8]

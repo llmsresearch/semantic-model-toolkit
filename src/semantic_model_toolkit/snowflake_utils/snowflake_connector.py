@@ -1,17 +1,21 @@
-import concurrent.futures
-from collections import defaultdict
+import re
+import time
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, TypeVar, Union
+from functools import partial
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, Generator
 
+import numpy as np
 import pandas as pd
 from loguru import logger
-from snowflake.connector import DictCursor
-from snowflake.connector.connection import SnowflakeConnection
-from snowflake.connector.errors import ProgrammingError
+from pandas.io.sql import DatabaseError
+from snowflake.connector import SnowflakeConnection, DictCursor
 
-from semantic_model_generator.data_processing.data_types import Column, Table
-from semantic_model_generator.snowflake_utils import env_vars
-from semantic_model_generator.snowflake_utils.utils import snowflake_connection
+from semantic_model_toolkit.core.config import SnowflakeConfig
+from semantic_model_toolkit.data_processing.data_types import Column, Table
+from semantic_model_toolkit.snowflake_utils import env_vars
+from semantic_model_toolkit.snowflake_utils.utils import snowflake_connection
 
 ConnectionType = TypeVar("ConnectionType")
 # Append this to the end of the auto-generated comments to indicate that the comment was auto-generated.
@@ -75,7 +79,7 @@ MEASURE_DATATYPES = [
 OBJECT_DATATYPES = ["VARIANT", "ARRAY", "OBJECT", "GEOGRAPHY"]
 
 
-_QUERY_TAG = "SEMANTIC_MODEL_GENERATOR"
+_QUERY_TAG = "semantic_model_toolkit"
 
 
 def _get_table_comment(
@@ -89,17 +93,46 @@ def _get_table_comment(
     else:
         # auto-generate table comment if it is not provided.
         try:
+            # Set a timeout for the query
+            conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 60")
+            
             tbl_ddl = (
                 conn.cursor()  # type: ignore[union-attr]
                 .execute(f"select get_ddl('table', '{schema_name}.{table_name}');")
                 .fetchall()[0][0]
                 .replace("'", "\\'")
             )
+            
+            # Limit DDL size to avoid query size limits
+            if len(tbl_ddl) > 10000:
+                logger.warning(f"Trimming table DDL from {len(tbl_ddl)} to 10000 characters")
+                tbl_ddl = tbl_ddl[:10000]
+                
             comment_prompt = f"Here is a table with below DDL: {tbl_ddl} \nPlease provide a business description for the table. Only return the description without any other text."
             complete_sql = f"select SNOWFLAKE.CORTEX.COMPLETE('{_autogen_model}', '{comment_prompt}')"
-            cmt = conn.cursor().execute(complete_sql).fetchall()[0][0]  # type: ignore[union-attr]
-            return str(cmt + AUTOGEN_TOKEN)
+            
+            # Execute with timeout
+            cursor = conn.cursor()
+            cursor.execute(complete_sql)
+            result = cursor.fetchall()
+            
+            # Reset timeout
+            conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 0")
+            
+            if result and len(result) > 0 and result[0] and len(result[0]) > 0:
+                cmt = result[0][0]
+                return str(cmt + AUTOGEN_TOKEN)
+            else:
+                logger.warning(f"Empty result from Cortex LLM for table {table_name}")
+                return ""
+                
         except Exception as e:
+            # Try to reset the timeout even after an error
+            try:
+                conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 0")
+            except:
+                pass
+                
             logger.warning(f"Unable to auto generate table comment: {e}")
             return ""
 
@@ -112,16 +145,45 @@ def _get_column_comment(
     else:
         # auto-generate column comment if it is not provided.
         try:
+            # Set a timeout for the query
+            conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 60")
+            
             comment_prompt = f"""Here is column from table {column_row['TABLE_NAME']}:
 name: {column_row['COLUMN_NAME']};
 type: {column_row['DATA_TYPE']};
 values: {';'.join(column_values) if column_values else ""};
 Please provide a business description for the column. Only return the description without any other text."""
+            
+            # Limit prompt size
+            if len(comment_prompt) > 5000:
+                logger.warning(f"Trimming comment prompt from {len(comment_prompt)} to 5000 characters")
+                comment_prompt = comment_prompt[:5000]
+                
             comment_prompt = comment_prompt.replace("'", "\\'")
             complete_sql = f"select SNOWFLAKE.CORTEX.COMPLETE('{_autogen_model}', '{comment_prompt}')"
-            cmt = conn.cursor().execute(complete_sql).fetchall()[0][0]  # type: ignore[union-attr]
-            return str(cmt + AUTOGEN_TOKEN)
+            
+            # Execute with timeout
+            cursor = conn.cursor()
+            cursor.execute(complete_sql)
+            result = cursor.fetchall()
+            
+            # Reset timeout
+            conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 0")
+            
+            if result and len(result) > 0 and result[0] and len(result[0]) > 0:
+                cmt = result[0][0]
+                return str(cmt + AUTOGEN_TOKEN)
+            else:
+                logger.warning(f"Empty result from Cortex LLM for column {column_row['COLUMN_NAME']}")
+                return ""
+                
         except Exception as e:
+            # Try to reset the timeout even after an error
+            try:
+                conn.cursor().execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 0")
+            except:
+                pass
+            
             logger.warning(f"Unable to auto generate column comment: {e}")
             return ""
 
@@ -137,6 +199,83 @@ def get_table_primary_keys(
     if primary_keys:
         return [pk[3] for pk in primary_keys]
     return None
+
+
+def get_table_foreign_keys(
+    conn: SnowflakeConnection,
+    table_fqn: str,
+) -> List[Dict[str, str]]:
+    """
+    Get foreign key constraints for a specific table.
+    
+    Args:
+        conn: Snowflake connection
+        table_fqn: Fully qualified table name (database.schema.table)
+        
+    Returns:
+        List of dictionaries with foreign key details:
+        - constraint_name: Name of the foreign key constraint
+        - column_name: Column in the source table
+        - referenced_table: Referenced table name
+        - referenced_column: Referenced column in the target table
+    """
+    try:
+        query = f"show imported keys in table {table_fqn};"
+        cursor = conn.cursor()
+        
+        cursor.execute(query)
+        foreign_keys = cursor.fetchall()
+        result = []
+        
+        if not foreign_keys:
+            logger.info(f"No foreign keys found for table {table_fqn}")
+            return []
+            
+        # Log the first row to see the structure
+        if foreign_keys and len(foreign_keys) > 0:
+            logger.debug(f"Foreign key response format: {foreign_keys[0]}")
+            
+        for fk in foreign_keys:
+            try:
+                # Safely extract values with error checking
+                if len(fk) < 10:
+                    logger.warning(f"Foreign key result has unexpected format: {fk}")
+                    continue
+                
+                # Extract values - check for None values to avoid issues
+                # Based on the logged format, the correct indices are:
+                # Database at index 5, schema at index 6, table at index 7
+                pk_table = str(fk[3]) if fk[3] is not None else ""
+                pk_column = str(fk[4]) if fk[4] is not None else ""
+                fk_database = str(fk[5]) if fk[5] is not None else ""
+                fk_schema = str(fk[6]) if fk[6] is not None else ""
+                fk_table = str(fk[7]) if fk[7] is not None else ""
+                fk_column = str(fk[8]) if fk[8] is not None else ""
+                constraint = str(fk[12]) if fk[12] is not None else ""
+                
+                if not pk_table or not pk_column or not fk_table or not fk_column:
+                    logger.warning(f"Incomplete foreign key data: {fk}")
+                    continue
+                
+                # Store the referenced table name as it appears in the semantic model (without DB and schema)
+                fk_info = {
+                    "constraint_name": constraint,
+                    "column_name": fk_column,
+                    "referenced_table": pk_table,  # Primary key table
+                    "referenced_column": pk_column,  # Primary key column
+                    "referenced_database": fk_database,
+                    "referenced_schema": fk_schema,
+                    "foreign_key_table": fk_table  # Table with the foreign key
+                }
+                result.append(fk_info)
+            except (IndexError, TypeError, ValueError) as e:
+                logger.warning(f"Error processing foreign key row {fk}: {str(e)}")
+                continue
+                
+        return result
+    except Exception as e:
+        logger.warning(f"Error fetching foreign keys for {table_fqn}: {str(e)}")
+        return []
 
 
 def get_table_representation(
@@ -160,17 +299,25 @@ def get_table_representation(
             ndv=ndv_per_column,
         )
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_col_index = {
-            executor.submit(_get_col, col_index, column_row): col_index
-            for col_index, (_, column_row) in enumerate(columns_df.iterrows())
-        }
-        index_and_column = []
-        for future in concurrent.futures.as_completed(future_to_col_index):
-            col_index = future_to_col_index[future]
-            column = future.result()
-            index_and_column.append((col_index, column))
-        columns = [c for _, c in sorted(index_and_column, key=lambda x: x[0])]
+    # If max_workers is 1 or less, process columns sequentially to avoid threading issues
+    if max_workers <= 1:
+        columns = []
+        for col_index, (_, column_row) in enumerate(columns_df.iterrows()):
+            column = _get_col(col_index, column_row)
+            columns.append(column)
+    else:
+        # Process columns in parallel using ThreadPoolExecutor
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_col_index = {
+                executor.submit(_get_col, col_index, column_row): col_index
+                for col_index, (_, column_row) in enumerate(columns_df.iterrows())
+            }
+            index_and_column = []
+            for future in concurrent.futures.as_completed(future_to_col_index):
+                col_index = future_to_col_index[future]
+                column = future.result()
+                index_and_column.append((col_index, column))
+            columns = [c for _, c in sorted(index_and_column, key=lambda x: x[0])]
 
     return Table(
         id_=table_index,

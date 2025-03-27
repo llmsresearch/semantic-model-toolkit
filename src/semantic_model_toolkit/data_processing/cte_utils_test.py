@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from semantic_model_generator.data_processing.cte_utils import remove_ltable_cte
+from semantic_model_toolkit.data_processing.cte_utils import remove_ltable_cte
 
 
 class TestRemoveLogicalTableCTE:

@@ -3,7 +3,7 @@ from typing import Dict, Optional, Union
 from snowflake.connector import connect
 from snowflake.connector.connection import SnowflakeConnection
 
-from semantic_model_generator.data_processing.data_types import FQNParts
+from semantic_model_toolkit.data_processing.data_types import FQNParts
 
 
 def create_fqn_table(fqn_str: str) -> FQNParts:

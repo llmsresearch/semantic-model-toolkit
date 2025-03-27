@@ -1,7 +1,7 @@
 import pytest
 
-from semantic_model_generator.data_processing.data_types import FQNParts
-from semantic_model_generator.snowflake_utils.utils import create_fqn_table
+from semantic_model_toolkit.data_processing.data_types import FQNParts
+from semantic_model_toolkit.snowflake_utils.utils import create_fqn_table
 
 
 def test_fqn_creation():

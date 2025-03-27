@@ -7,8 +7,8 @@ from google.protobuf import json_format
 from google.protobuf.message import Message
 from strictyaml import dirty_load
 
-from semantic_model_generator.protos import semantic_model_pb2
-from semantic_model_generator.validate.schema import SCHEMA
+from semantic_model_toolkit.protos import semantic_model_pb2
+from semantic_model_toolkit.validate.schema import SCHEMA
 
 ProtoMsg = TypeVar("ProtoMsg", bound=Message)
 
@@ -85,3 +85,15 @@ def yaml_to_semantic_model(yaml_str: str) -> semantic_model_pb2.SemanticModel:
     )
     msg = semantic_model_pb2.SemanticModel()
     return json_format.ParseDict(parsed_yaml.data, msg)
+
+
+def semantic_model_to_yaml(model: semantic_model_pb2.SemanticModel) -> str:
+    """Converts a semantic model protobuf message to YAML format.
+
+    Args:
+        model: The semantic model protobuf message to convert.
+
+    Returns:
+        The YAML string representation of the semantic model.
+    """
+    return proto_to_yaml(model)

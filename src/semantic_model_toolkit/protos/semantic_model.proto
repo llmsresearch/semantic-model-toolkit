@@ -1,13 +1,13 @@
 // If you make changes to this file, you'll need to run protoc to updated the
 // generated files by running the following command:
 //
-// python -m grpc_tools.protoc -I=semantic_model_generator/protos/ --python_out=semantic_model_generator/protos/ --pyi_out=semantic_model_generator/protos/ semantic_model_generator/protos/semantic_model.proto
+// python -m grpc_tools.protoc -I=semantic_model_toolkit/protos/ --python_out=semantic_model_toolkit/protos/ --pyi_out=semantic_model_toolkit/protos/ semantic_model_toolkit/protos/semantic_model.proto
 
 syntax = "proto3";
 
 import "google/protobuf/descriptor.proto";
 
-package semantic_model_generator;
+package semantic_model_toolkit;
 
 // We are using proto FieldOptions to validate the YAMLs match the expected
 // schema. Any fields with the `optional` option, are not required during YAML

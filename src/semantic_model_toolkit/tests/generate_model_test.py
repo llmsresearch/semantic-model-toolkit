@@ -4,16 +4,16 @@ import pandas as pd
 import pytest
 import yaml
 
-from semantic_model_generator.data_processing import proto_utils
-from semantic_model_generator.data_processing.data_types import Column, Table
-from semantic_model_generator.generate_model import (
+from semantic_model_toolkit.data_processing import proto_utils
+from semantic_model_toolkit.data_processing.data_types import Column, Table
+from semantic_model_toolkit.generate_model import (
     _AUTOGEN_COMMENT_WARNING,
     _to_snake_case,
     generate_base_semantic_model_from_snowflake,
     raw_schema_to_semantic_context,
 )
-from semantic_model_generator.protos import semantic_model_pb2
-from semantic_model_generator.snowflake_utils.snowflake_connector import (
+from semantic_model_toolkit.protos import semantic_model_pb2
+from semantic_model_toolkit.snowflake_utils.snowflake_connector import (
     OBJECT_DATATYPES,
     SnowflakeConnector,
 )
@@ -29,7 +29,7 @@ def test_to_snake_case():
 def mock_snowflake_connection():
     """Fixture to mock the snowflake_connection function."""
     with patch(
-        "semantic_model_generator.snowflake_utils.snowflake_connector.snowflake_connection"
+        "semantic_model_toolkit.snowflake_utils.snowflake_connector.snowflake_connection"
     ) as mock:
         mock.return_value = MagicMock()
         yield mock
@@ -223,10 +223,10 @@ def mock_dependencies(mock_snowflake_connection):
     ]
 
     with patch(
-        "semantic_model_generator.generate_model.get_valid_schemas_tables_columns_df",
+        "semantic_model_toolkit.generate_model.get_valid_schemas_tables_columns_df",
         side_effect=valid_schemas_tables_representations,
     ), patch(
-        "semantic_model_generator.generate_model.get_table_representation",
+        "semantic_model_toolkit.generate_model.get_table_representation",
         side_effect=table_representations,
     ):
         yield
@@ -257,10 +257,10 @@ def mock_dependencies_new_dtype(mock_snowflake_connection):
     ]
 
     with patch(
-        "semantic_model_generator.generate_model.get_valid_schemas_tables_columns_df",
+        "semantic_model_toolkit.generate_model.get_valid_schemas_tables_columns_df",
         side_effect=valid_schemas_tables_representations,
     ), patch(
-        "semantic_model_generator.generate_model.get_table_representation",
+        "semantic_model_toolkit.generate_model.get_table_representation",
         side_effect=table_representations,
     ):
         yield
@@ -291,10 +291,10 @@ def mock_dependencies_object_dtype(mock_snowflake_connection):
     ]
 
     with patch(
-        "semantic_model_generator.generate_model.get_valid_schemas_tables_columns_df",
+        "semantic_model_toolkit.generate_model.get_valid_schemas_tables_columns_df",
         side_effect=valid_schemas_tables_representations,
     ), patch(
-        "semantic_model_generator.generate_model.get_table_representation",
+        "semantic_model_toolkit.generate_model.get_table_representation",
         side_effect=table_representations,
     ):
         yield
@@ -325,10 +325,10 @@ def mock_dependencies_exceed_context(mock_snowflake_connection):
     ]
 
     with patch(
-        "semantic_model_generator.generate_model.get_valid_schemas_tables_columns_df",
+        "semantic_model_toolkit.generate_model.get_valid_schemas_tables_columns_df",
         side_effect=valid_schemas_tables_representations,
     ), patch(
-        "semantic_model_generator.generate_model.get_table_representation",
+        "semantic_model_toolkit.generate_model.get_table_representation",
         side_effect=table_representations,
     ):
         yield
@@ -420,7 +420,7 @@ def test_generate_base_context_with_placeholder_comments_cross_database_cross_sc
     assert mock_file().write.call_count == 2
 
 
-@patch("semantic_model_generator.generate_model.logger")
+@patch("semantic_model_toolkit.generate_model.logger")
 @patch("builtins.open", new_callable=mock_open)
 def test_generate_base_context_with_placeholder_comments_missing_datatype(
     mock_file,
@@ -453,7 +453,7 @@ def test_generate_base_context_with_placeholder_comments_missing_datatype(
     mock_logger.warning.assert_has_calls(expected_calls, any_order=False)
 
 
-@patch("semantic_model_generator.generate_model.logger")
+@patch("semantic_model_toolkit.generate_model.logger")
 @patch("builtins.open", new_callable=mock_open)
 def test_generate_base_context_from_table_that_has_not_supported_dtype(
     mock_file,
@@ -490,7 +490,7 @@ def test_generate_base_context_from_table_that_has_not_supported_dtype(
     mock_file().write.assert_not_called()
 
 
-@patch("semantic_model_generator.validate.context_length.logger")
+@patch("semantic_model_toolkit.validate.context_length.logger")
 @patch("builtins.open", new_callable=mock_open)
 def test_generate_base_context_from_table_that_has_too_long_context(
     mock_file,
